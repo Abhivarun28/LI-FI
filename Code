@@ -1,0 +1,126 @@
+#define LASERPIN 7 
+#define SOLARPIN A0
+#define THRESHOLD 210.
+int x; 
+int q=0;
+int y=0;
+void setup() 
+{
+  pinMode (LASERPIN, OUTPUT) ;
+  pinMode(SOLARPIN, INPUT);
+  Serial.begin(9600);
+  Serial.println("To transmit data press 1.....To receive data press 0..... "); 
+  Serial.println();
+}
+
+void loop()
+{
+ 
+  if (Serial.available())
+  {
+    x= Serial.read();
+  }
+  if (x =='1')
+  {
+    t();
+  }
+  else if (x=='0')
+  {
+    r();
+  }
+ 
+}
+
+void t() 
+{ 
+  if (y==0)
+  {
+    Serial.println("Transmitting data");
+    Serial.println();
+    y =1;
+  }
+  int ar[20];
+  int m;
+  int bits[8];
+  delay(10);
+  // GETTING MESSAGE FROM USER
+  while (Serial.available() > 0) {
+    m = Serial.read();
+    
+    Serial.print(char(m));
+    int z;
+    int bin[7];
+    int newbin[7];
+    
+    // CONVERTING MESSAGE TO BINARY  
+    for(z=0;z<8;z++){
+      bin[z] = m%2;
+      m = m /2 ; 
+    }
+    
+  for (int j= 7 ; j>=0 ; j-- )
+  {
+      newbin[7-j] = bin[j] ;
+  }
+  
+  // ENCODING THE MESSAGE IN THE FORM OF HIGHS AND LOWS
+  for( int p=0 ; p<8 ; p++ )
+  { 
+    if (newbin[p] == 1)
+    {
+      bits[p] = HIGH ;
+    }
+    if ( newbin[p] == 0)
+    {
+      bits[p] = LOW ;
+    }
+  }
+
+  // TRANSMITTING THE MESSAGE
+  bits[0] = HIGH;
+  for (int i = 0; i < 8; i++) 
+  {
+    digitalWrite(LASERPIN, bits[i]);
+    delay(10);
+  }
+    digitalWrite(LASERPIN, LOW);
+    delay(100);
+  }
+}
+void r()
+{
+  if (y==0)
+  {
+    Serial.println("Receiving data");
+    Serial.println();
+    y =1;
+  }
+  
+  int reading = analogRead(SOLARPIN);
+  int bit[8];
+  
+  if (reading > THRESHOLD)
+  {
+    for (int i =0; i<8 ; i++) 
+    {
+      if (analogRead(SOLARPIN) > THRESHOLD)
+      {
+        bit[i] = 1 ;
+      }
+      else 
+      {
+        bit[i] = 0;
+      }
+      delay(10);
+    }
+    int m = 0;
+    for (int j =1; j <8; j++) 
+    {
+       if (bit[j] ==1)
+       {
+         m = m + (1<<(7-j));
+       }
+    }
+    Serial.print(char(m));
+  }
+}
